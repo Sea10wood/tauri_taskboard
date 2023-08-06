@@ -20,8 +20,8 @@
     },
     "bundle": {
       "active": true,
+      "identifier": "com.sea10.try-tauri",
       "targets": "all",
-      "identifier": "com.tauri.dev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
