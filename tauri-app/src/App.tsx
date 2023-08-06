@@ -1,52 +1,130 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import Board from '@asseinfo/react-kanban';
+import '@asseinfo/react-kanban/dist/styles.css';
+import { useEffect, useState } from 'react';
+import Sea10DataTimePicker from '../src/DataPicker';
+
+import { UserTimeContext, UserTitleContext, useUserTime, useUserTitle } from './useinfo';
+
+import TaskTable from '../src/Table';
+import './App.css';
+
+
+const board = {
+  columns: [
+    {
+      id: 0,
+      list: 'やりたいタスク',
+
+      cards: [
+        {
+          id: 0,
+          title: 'かんばんボードを追加する',
+          description: 'neko',
+          // date: "2022/11/22 00:00:00",
+          // time: "2023/08/15 12:00:00",
+        },
+      ]
+    },
+    {
+      id: 1,
+      list: 'タスク',
+      cards: []
+    },
+    {
+      id: 2,
+      list: '進行中',
+      cards: []
+    },
+    {
+      id: 3,
+      list: '完了',
+      cards: []
+    }
+  ]
+}
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const title = useUserTitle();
+  const time = useUserTime();
+  const userTitle = "Some User Title";
+  const userTime = "Some User Time";
+  const [cards, setCards] = useState(board.columns[1].cards);
+  const handleCardNew = (newCard: {
+    id: number;
+    list: string;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+  }) => {
+    setCards((prevCards) => [...prevCards, newCard]);
+  };
+  const handleCardRemove = (cardId: number) => {
+    setCards((prevCards) => prevCards.filter((card) => card.id !== cardId));
+  };
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    console.log("cards", cards)
+  }, [cards])
+
+
 
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg}</p>
-    </div>
+    <>
+      <h1 style={{ fontSize: '40px', fontWeight: 'bold', textAlign: 'left', marginLeft: '15px', marginTop: '50px', marginBottom: '60px', }}>Sea10's Task Manager</h1>
+      <UserTitleContext.Provider value={userTitle}>
+        <UserTimeContext.Provider value={userTime}>
+          <TaskTable cards={cards} title={title} time={time} onCardRemove={handleCardRemove} />
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Board
+              initialBoard={board}
+              allowAddCard={{ on: "top" }}
+              allowRemoveCard
+              disableColumnDrag
+              onNewCardConfirm={(draftCard: any) => ({
+                id: new Date().getTime(),
+                ...draftCard
+              })}
+              onCardNew={(e) =>setCards(e.columns[1].cards)}
+              onCardDragEnd={(event: any) => console.log("event", event)}
+              onCardRemove={() =>console.log("success")}
+              renderCard={(props: any) => (
+                <>
+                  <Sea10DataTimePicker onCardNew={handleCardNew} />
+                  <div
+                    style={{
+                      border: "1px solid gray",
+                      borderRadius: "2px",
+                      position: "relative",
+                      padding: 5,
+                      width: "250px",
+                      margin: "10px",
+                    }}
+                  >
+                    <div>
+                      <span >
+                        {props.title}
+                      </span>
+                      {/* <div style={{ fontSize: "10px", color: "gray" }}>
+                        {props.date} {props.time}
+                      </div> */}
+                      <button
+                        style={{ position: "absolute", right: -2, top: -2 }}
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <span>{ props.Time}</span>
+                    <span>{props.description}</span>
+                  </div>
+                </>
+              )}
+            />
+          </div>
+        </UserTimeContext.Provider>
+      </UserTitleContext.Provider>
+    </>
   );
 }
 
